@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import io
-import requests
+import os
 import time
 import plotly.express as px
 from streamlit_option_menu import option_menu
 from utils.auth import require_auth
 from utils.data_processor import load_data, preprocess_data, check_data_quality, get_data_summary
+from utils.offline import OFFLINE_MODE, get_sample_data, log_offline_activity, DATA_DIR
 
 # Require authentication
 require_auth()

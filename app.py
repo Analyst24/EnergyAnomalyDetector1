@@ -1,19 +1,35 @@
 import streamlit as st
 import os
 import json
+import sys
 from streamlit_option_menu import option_menu
 import pandas as pd
 import time
+import warnings
+
+# Import offline utilities first to enable offline mode from startup
+from utils.offline import OFFLINE_MODE, log_offline_activity, is_connected
 from utils.auth import login_user, register_user, logout_user
 from utils.database import initialize_database
 
+# Suppress warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+
 # Set up page configuration
 st.set_page_config(
-    page_title="Energy Anomaly Detection",
+    page_title="Energy Anomaly Detection (Offline)",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Log application start
+log_offline_activity("app_startup", {
+    "python_version": sys.version,
+    "offline_mode": OFFLINE_MODE,
+    "internet_connection": is_connected()
+})
 
 # Initialize database
 initialize_database()
@@ -48,6 +64,26 @@ def logout():
     st.session_state.current_data = None
     st.session_state.detection_results = None
 
+# Display offline mode status
+if OFFLINE_MODE:
+    st.markdown(
+        """
+        <div style='
+            padding: 0.5rem; 
+            background-color: #ff9900; 
+            color: black; 
+            position: fixed; 
+            top: 0; 
+            right: 0; 
+            z-index: 9999; 
+            font-size: 0.8rem; 
+            border-radius: 0 0 0 5px;'>
+            OFFLINE MODE
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 # Login UI
 if not st.session_state.authenticated:
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -69,6 +105,9 @@ if not st.session_state.authenticated:
         
         with st.container():
             st.markdown("<h1 style='text-align: center;'>Energy Anomaly Detection</h1>", unsafe_allow_html=True)
+            
+            if OFFLINE_MODE:
+                st.info("Application is running in offline mode. All features will work without internet connectivity.")
             
             tab1, tab2 = st.tabs(["Login", "Sign Up"])
             
