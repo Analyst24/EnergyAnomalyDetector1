@@ -313,8 +313,6 @@ else:
     1. Either download the sample CSV using the button above and then upload it, or
     2. Click "Load Sample Dataset Directly" to use the data immediately without downloading
     3. The system will automatically process the data and prepare it for anomaly detection
-    
-    *This feature works 100% offline with no internet connection required.*
     """)
 
 # Footer

@@ -64,25 +64,7 @@ def logout():
     st.session_state.current_data = None
     st.session_state.detection_results = None
 
-# Display offline mode status
-if OFFLINE_MODE:
-    st.markdown(
-        """
-        <div style='
-            padding: 0.5rem; 
-            background-color: #ff9900; 
-            color: black; 
-            position: fixed; 
-            top: 0; 
-            right: 0; 
-            z-index: 9999; 
-            font-size: 0.8rem; 
-            border-radius: 0 0 0 5px;'>
-            OFFLINE MODE
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# Removed offline mode banner for cleaner UI
 
 # Login UI
 if not st.session_state.authenticated:
