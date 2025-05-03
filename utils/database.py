@@ -9,6 +9,12 @@ import numpy as np
 
 # Create SQLAlchemy engine and base
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Fallback to SQLite for local environments if PostgreSQL is not available
+if not DATABASE_URL:
+    print("DATABASE_URL not found, using SQLite database for local development")
+    DATABASE_URL = "sqlite:///energy_anomaly.db"
+
 engine = create_engine(DATABASE_URL)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
