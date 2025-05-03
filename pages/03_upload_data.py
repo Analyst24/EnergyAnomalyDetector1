@@ -254,8 +254,10 @@ else:
         
         # Create anomalies (for documentation, not detected yet)
         anomaly_indices = np.random.choice(range(len(dates)), size=50, replace=False)
+        consumption_array = consumption.values.copy()  # Convert to numpy array
         for idx in anomaly_indices:
-            consumption[idx] *= np.random.choice([0.5, 1.5])
+            consumption_array[idx] *= np.random.choice([0.5, 1.5])
+        consumption = pd.Series(consumption_array, index=dates)
         
         # Create DataFrame
         df = pd.DataFrame({

@@ -3,14 +3,21 @@ import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-import tensorflow as tf
-from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import Dense, Input
-from tensorflow.keras.callbacks import EarlyStopping
 import joblib
 import os
 import json
 import time
+
+# TensorFlow is optional - we'll try to import it but will provide alternatives if not available
+TENSORFLOW_AVAILABLE = False
+try:
+    import tensorflow as tf
+    from tensorflow.keras.models import Sequential, Model
+    from tensorflow.keras.layers import Dense, Input
+    from tensorflow.keras.callbacks import EarlyStopping
+    TENSORFLOW_AVAILABLE = True
+except Exception as e:
+    print(f"TensorFlow not available: {e}. Autoencoder model will use a fallback approach.")
 
 # Create models directory if it doesn't exist
 os.makedirs('models', exist_ok=True)
@@ -141,82 +148,130 @@ def train_autoencoder(X, contamination=0.05):
     Returns:
         Trained model, anomaly predictions (1 for anomalies, 0 for normal)
     """
+    if not TENSORFLOW_AVAILABLE:
+        # Fallback to using isolation forest if TensorFlow is not available
+        print("Using Isolation Forest as fallback since TensorFlow is not available")
+        model, anomalies, anomaly_scores = train_isolation_forest(X, contamination)
+        
+        # Save metadata indicating we used a fallback
+        metadata = {
+            'model_type': 'autoencoder_fallback',
+            'actual_model': 'isolation_forest',
+            'reason': 'TensorFlow not available',
+            'contamination': contamination,
+            'num_samples': X.shape[0],
+            'num_features': X.shape[1],
+            'training_date': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'anomaly_count': int(np.sum(anomalies)),
+            'normal_count': int(X.shape[0] - np.sum(anomalies))
+        }
+        
+        with open('models/autoencoder_metadata.json', 'w') as f:
+            json.dump(metadata, f)
+        
+        return model, anomalies, anomaly_scores
+    
+    # If TensorFlow is available, use a proper autoencoder
     # Define architecture
     input_dim = X.shape[1]
     encoding_dim = max(int(input_dim / 2), 1)  # at least 1 neuron
     
-    # Build autoencoder model
-    input_layer = Input(shape=(input_dim,))
+    try:
+        # Build autoencoder model
+        input_layer = Input(shape=(input_dim,))
+        
+        # Encoder
+        encoder = Dense(encoding_dim * 2, activation='relu')(input_layer)
+        encoder = Dense(encoding_dim, activation='relu')(encoder)
+        
+        # Decoder
+        decoder = Dense(encoding_dim * 2, activation='relu')(encoder)
+        decoder = Dense(input_dim, activation='sigmoid')(decoder)
+        
+        # Autoencoder model
+        autoencoder = Model(inputs=input_layer, outputs=decoder)
+        autoencoder.compile(optimizer='adam', loss='mse')
+        
+        # Train model
+        early_stopping = EarlyStopping(
+            monitor='val_loss',
+            patience=5,
+            min_delta=0.0001,
+            restore_best_weights=True
+        )
+        
+        history = autoencoder.fit(
+            X, X,
+            epochs=100,
+            batch_size=32,
+            shuffle=True,
+            validation_split=0.2,
+            callbacks=[early_stopping],
+            verbose=0
+        )
+        
+        # Calculate reconstruction error
+        predictions = autoencoder.predict(X)
+        mse = np.mean(np.power(X - predictions, 2), axis=1)
+        
+        # Normalize scores
+        normalized_mse = (mse - np.min(mse)) / (np.max(mse) - np.min(mse))
+        
+        # Set threshold based on contamination level
+        threshold = np.percentile(normalized_mse, 100 * (1 - contamination))
+        
+        # Points with MSE > threshold are anomalies
+        anomalies = (normalized_mse > threshold).astype(int)
+        anomaly_scores = normalized_mse
+        
+        # Save model
+        model_path = 'models/autoencoder'
+        autoencoder.save(model_path)
+        
+        # Save threshold and other metadata
+        metadata = {
+            'model_type': 'autoencoder',
+            'encoding_dim': encoding_dim,
+            'contamination': contamination,
+            'threshold': float(threshold),
+            'min_mse': float(np.min(mse)),
+            'max_mse': float(np.max(mse)),
+            'num_samples': X.shape[0],
+            'num_features': X.shape[1],
+            'training_date': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'anomaly_count': int(np.sum(anomalies)),
+            'normal_count': int(X.shape[0] - np.sum(anomalies)),
+            'training_epochs': len(history.history['loss']),
+            'final_loss': float(history.history['loss'][-1])
+        }
+        
+        with open('models/autoencoder_metadata.json', 'w') as f:
+            json.dump(metadata, f)
+        
+        return autoencoder, anomalies, anomaly_scores
     
-    # Encoder
-    encoder = Dense(encoding_dim * 2, activation='relu')(input_layer)
-    encoder = Dense(encoding_dim, activation='relu')(encoder)
-    
-    # Decoder
-    decoder = Dense(encoding_dim * 2, activation='relu')(encoder)
-    decoder = Dense(input_dim, activation='sigmoid')(decoder)
-    
-    # Autoencoder model
-    autoencoder = Model(inputs=input_layer, outputs=decoder)
-    autoencoder.compile(optimizer='adam', loss='mse')
-    
-    # Train model
-    early_stopping = EarlyStopping(
-        monitor='val_loss',
-        patience=5,
-        min_delta=0.0001,
-        restore_best_weights=True
-    )
-    
-    history = autoencoder.fit(
-        X, X,
-        epochs=100,
-        batch_size=32,
-        shuffle=True,
-        validation_split=0.2,
-        callbacks=[early_stopping],
-        verbose=0
-    )
-    
-    # Calculate reconstruction error
-    predictions = autoencoder.predict(X)
-    mse = np.mean(np.power(X - predictions, 2), axis=1)
-    
-    # Normalize scores
-    normalized_mse = (mse - np.min(mse)) / (np.max(mse) - np.min(mse))
-    
-    # Set threshold based on contamination level
-    threshold = np.percentile(normalized_mse, 100 * (1 - contamination))
-    
-    # Points with MSE > threshold are anomalies
-    anomalies = (normalized_mse > threshold).astype(int)
-    anomaly_scores = normalized_mse
-    
-    # Save model
-    model_path = 'models/autoencoder'
-    autoencoder.save(model_path)
-    
-    # Save threshold and other metadata
-    metadata = {
-        'model_type': 'autoencoder',
-        'encoding_dim': encoding_dim,
-        'contamination': contamination,
-        'threshold': float(threshold),
-        'min_mse': float(np.min(mse)),
-        'max_mse': float(np.max(mse)),
-        'num_samples': X.shape[0],
-        'num_features': X.shape[1],
-        'training_date': time.strftime('%Y-%m-%d %H:%M:%S'),
-        'anomaly_count': int(np.sum(anomalies)),
-        'normal_count': int(X.shape[0] - np.sum(anomalies)),
-        'training_epochs': len(history.history['loss']),
-        'final_loss': float(history.history['loss'][-1])
-    }
-    
-    with open('models/autoencoder_metadata.json', 'w') as f:
-        json.dump(metadata, f)
-    
-    return autoencoder, anomalies, anomaly_scores
+    except Exception as e:
+        # If anything goes wrong with TensorFlow, fallback to isolation forest
+        print(f"Error using TensorFlow: {e}. Falling back to Isolation Forest.")
+        model, anomalies, anomaly_scores = train_isolation_forest(X, contamination)
+        
+        # Save metadata indicating we used a fallback
+        metadata = {
+            'model_type': 'autoencoder_fallback',
+            'actual_model': 'isolation_forest',
+            'reason': f'TensorFlow error: {str(e)}',
+            'contamination': contamination,
+            'num_samples': X.shape[0],
+            'num_features': X.shape[1],
+            'training_date': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'anomaly_count': int(np.sum(anomalies)),
+            'normal_count': int(X.shape[0] - np.sum(anomalies))
+        }
+        
+        with open('models/autoencoder_metadata.json', 'w') as f:
+            json.dump(metadata, f)
+        
+        return model, anomalies, anomaly_scores
 
 def detect_anomalies(X, model_type='isolation_forest', contamination=0.05):
     """

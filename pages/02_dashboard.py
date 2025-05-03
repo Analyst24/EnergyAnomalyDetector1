@@ -41,8 +41,9 @@ with st.sidebar:
             st.switch_page("pages/01_get_started.py")
         else:
             page_name = selected.lower().replace(' ', '_')
-            st.switch_page(f"pages/0{['upload_data', 'run_detection', 'results', 
-                                'model_insights', 'recommendations', 'settings', 'logout'].index(page_name) + 3}_{page_name}.py")
+            pages_list = ['upload_data', 'run_detection', 'results', 'model_insights', 'recommendations', 'settings', 'logout']
+            page_index = pages_list.index(page_name)
+            st.switch_page(f"pages/0{page_index + 3}_{page_name}.py")
 
 # Main container
 st.markdown("<h1 style='text-align: center;'>Energy Dashboard</h1>", unsafe_allow_html=True)
@@ -74,10 +75,12 @@ if not has_data:
     anomalies = np.zeros(len(dates))
     anomaly_scores = np.random.normal(0.1, 0.05, len(dates))
     
+    consumption_array = consumption.values.copy()  # Convert to numpy array
     for idx in anomaly_indices:
-        consumption[idx] *= np.random.choice([0.5, 1.5])  # Either too high or too low
+        consumption_array[idx] *= np.random.choice([0.5, 1.5])  # Either too high or too low
         anomalies[idx] = 1
         anomaly_scores[idx] = np.random.uniform(0.6, 0.9)
+    consumption = pd.Series(consumption_array, index=dates)
     
     # Create DataFrame
     df = pd.DataFrame({
