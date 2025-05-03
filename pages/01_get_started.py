@@ -33,8 +33,10 @@ with st.sidebar:
     # Handle navigation
     if selected and selected != "Home":
         page_name = selected.lower().replace(' ', '_')
-        st.switch_page(f"pages/0{['dashboard', 'upload_data', 'run_detection', 'results', 
-                              'model_insights', 'recommendations', 'settings', 'logout'].index(page_name) + 2}_{page_name}.py")
+        pages_list = ['dashboard', 'upload_data', 'run_detection', 'results', 
+                      'model_insights', 'recommendations', 'settings', 'logout']
+        page_index = pages_list.index(page_name)
+        st.switch_page(f"pages/0{page_index + 2}_{page_name}.py")
 
 # Main container
 st.markdown("<h1 style='text-align: center;'>Energy Anomaly Detection</h1>", unsafe_allow_html=True)
