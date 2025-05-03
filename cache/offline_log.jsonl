@@ -23,3 +23,5 @@
 {"timestamp": "2025-05-03T10:33:17.144042", "type": "startup", "details": {"offline_mode": true, "internet_available": false}}
 {"timestamp": "2025-05-03T10:33:19.059074", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
 {"timestamp": "2025-05-03T10:33:19.060631", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:33:32.208432", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:33:35.274426", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
