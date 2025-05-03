@@ -1,7 +1,1 @@
-{
-    "demo": {
-        "password_hash": "e84c005bebaa870ff5cf1eaba88c3f7be174eeef17de9c031cd7c6a99e2f7f38",
-        "email": "demo@example.com",
-        "created_at": 1714924800
-    }
-}
+{"demo": {"password_hash": "e84c005bebaa870ff5cf1eaba88c3f7be174eeef17de9c031cd7c6a99e2f7f38", "email": "demo@example.com", "created_at": 1714924800}, "Opulent": {"password_hash": "52299c837a9b1e4c2168c9cba9796ebae57eb9d80f158dc1ce082a224b124d01", "email": "opulentmagomo@gmail.com", "created_at": 1746264617.8447037}}

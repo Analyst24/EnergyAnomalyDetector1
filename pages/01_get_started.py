@@ -161,9 +161,14 @@ with col2:
         z=z,
         x=hours,
         y=days,
-        colorscale='Viridis',
-        domain=dict(x=[0, 1], y=[0, 0.45])
+        colorscale='Viridis'
     ))
+    
+    # Update the layout to position the heatmap in the lower part of the figure
+    fig.update_layout(
+        xaxis=dict(domain=[0, 1]),
+        yaxis=dict(domain=[0, 0.45])
+    )
     
     # Update layout
     fig.update_layout(
