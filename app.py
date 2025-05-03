@@ -16,12 +16,12 @@ from utils.database import initialize_database
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
-# Set up page configuration
+# Set up page configuration - making sidebar collapsed for login page
 st.set_page_config(
     page_title="Energy Anomaly Detection (Offline)",
     page_icon="⚡",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",  # Changed to collapsed for login page
 )
 
 # Log application start
@@ -86,22 +86,27 @@ if OFFLINE_MODE:
 
 # Login UI
 if not st.session_state.authenticated:
+    # Hide sidebar completely for login page
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"] {
+            display: none;
+        }
+        .login-container {
+            background-color: #252525;
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 50px;
+        }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+    
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown(
-            """
-            <style>
-            .login-container {
-                background-color: #252525;
-                padding: 30px;
-                border-radius: 10px;
-                margin-top: 50px;
-            }
-            </style>
-            """, 
-            unsafe_allow_html=True
-        )
         
         with st.container():
             st.markdown("<h1 style='text-align: center;'>Energy Anomaly Detection</h1>", unsafe_allow_html=True)
@@ -154,5 +159,5 @@ if not st.session_state.authenticated:
         unsafe_allow_html=True
     )
 else:
-    # Redirect to Get Started page after login
-    st.switch_page("pages/01_get_started.py")
+    # Redirect to Home page after login
+    st.switch_page("pages/01_home.py")

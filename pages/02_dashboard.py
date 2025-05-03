@@ -38,7 +38,7 @@ with st.sidebar:
     # Handle navigation
     if selected != "Dashboard":
         if selected == "Home":
-            st.switch_page("pages/01_get_started.py")
+            st.switch_page("pages/01_home.py")
         else:
             page_name = selected.lower().replace(' ', '_')
             pages_list = ['upload_data', 'run_detection', 'results', 'model_insights', 'recommendations', 'settings', 'logout']
