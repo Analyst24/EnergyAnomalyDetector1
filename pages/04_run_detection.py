@@ -70,7 +70,10 @@ else:
     
     with col3:
         if 'timestamp' in df.columns:
-            time_range = f"{df['timestamp'].min().split(' ')[0]} to {df['timestamp'].max().split(' ')[0]}"
+            # Format timestamps as string dates
+            min_time = df['timestamp'].min().strftime('%Y-%m-%d')
+            max_time = df['timestamp'].max().strftime('%Y-%m-%d')
+            time_range = f"{min_time} to {max_time}"
             st.metric("Time Range", time_range)
         else:
             st.metric("Time Range", "N/A")
