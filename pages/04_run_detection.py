@@ -287,10 +287,24 @@ else:
                         st.session_state.detection_metadata['hour_anomalies'] = hour_anomalies
                         st.session_state.detection_metadata['day_anomalies'] = day_anomalies
                     
-                    # Add feature importance for Isolation Forest
+                    # Add feature importance for Isolation Forest if available
                     if selected_model == 'isolation_forest':
-                        feature_importance = dict(zip(selected_features, model.feature_importances_))
-                        st.session_state.detection_metadata['feature_importance'] = feature_importance
+                        try:
+                            if hasattr(model, 'feature_importances_'):
+                                feature_importance = dict(zip(selected_features, model.feature_importances_))
+                                st.session_state.detection_metadata['feature_importance'] = feature_importance
+                            else:
+                                # If feature_importances_ is not available, use a simple placeholder
+                                st.session_state.detection_metadata['feature_importance'] = {
+                                    feature: 1.0/len(selected_features) for feature in selected_features
+                                }
+                                st.warning("Feature importance not available for this model version. Using equal weights.")
+                        except Exception as e:
+                            st.warning(f"Could not extract feature importance: {str(e)}")
+                            # Fallback to equal weights
+                            st.session_state.detection_metadata['feature_importance'] = {
+                                feature: 1.0/len(selected_features) for feature in selected_features
+                            }
                 
                 # Show success message
                 st.success(f"Anomaly detection completed in {processing_time:.2f} seconds!")

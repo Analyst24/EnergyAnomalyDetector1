@@ -55,11 +55,34 @@ def export_figure_as_image(fig, filename="plot.png", format="png"):
         format: Image format ('png', 'jpg', 'jpeg', 'webp', 'svg', 'pdf')
         
     Returns:
-        HTML string for download button
+        HTML string for download button or alternative HTML with a message
     """
-    img_bytes = pio.to_image(fig, format=format)
-    
-    return get_binary_file_downloader_html(img_bytes, f"Download {format.upper()}", filename)
+    try:
+        # Try to use kaleido to export the image
+        import plotly.io as pio
+        img_bytes = pio.to_image(fig, format=format)
+        return get_binary_file_downloader_html(img_bytes, f"Download {format.upper()}", filename)
+    except (ImportError, ValueError):
+        # Fallback method - provide a download link to the JSON instead
+        # This approach won't generate images but allows the user to download the plot data
+        import json
+        import base64
+        
+        figure_json = fig.to_json()
+        bytes_data = figure_json.encode()
+        b64 = base64.b64encode(bytes_data).decode()
+        
+        href = f'<a href="data:application/json;base64,{b64}" download="{filename.replace("png", "json")}" target="_blank">Download Plot Data (JSON)</a>'
+        message = """<div style="padding: 10px; margin: 10px 0; border-radius: 5px; background-color: #f0f2f6;">
+            <p><strong>Note:</strong> Direct image export is not available. You can:</p>
+            <ul>
+                <li>Use the "Save as PNG" button on the plot's toolbar (hover on the plot to see it)</li>
+                <li>Download the plot data below and open it on other tools</li>
+            </ul>
+            {}
+        </div>""".format(href)
+        
+        return message
 
 def generate_pdf_report(df, detection_results, filename="anomaly_report.pdf"):
     """

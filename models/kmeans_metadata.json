@@ -1,0 +1,1 @@
+{"model_type": "kmeans", "n_clusters": 2, "contamination": 0.05, "threshold": 0.7293606123920909, "min_distance": 0.8418108833305242, "max_distance": 3.5354728712176016, "num_samples": 5000, "num_features": 5, "training_date": "2025-05-03 09:57:16", "anomaly_count": 250, "normal_count": 4750}

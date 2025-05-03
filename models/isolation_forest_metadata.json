@@ -1,0 +1,1 @@
+{"model_type": "isolation_forest", "contamination": 0.05, "num_samples": 5000, "num_features": 5, "training_date": "2025-05-03 09:59:14", "anomaly_count": 250, "normal_count": 4750}
