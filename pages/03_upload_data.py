@@ -235,65 +235,86 @@ else:
     The system can handle missing values and will adapt to your data structure.
     """)
     
-    # Sample data download
-    st.markdown("### Download Sample Dataset")
+    # Sample data section
+    st.markdown("### Use Sample Dataset")
     
-    # Create sample data
-    def generate_sample_data():
-        np.random.seed(42)
-        dates = pd.date_range(start='2025-01-01', periods=1000, freq='H')
+    # Show options for offline sample data
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### Sample Data Preview")
+        # Get sample data from offline module
+        sample_df = get_sample_data()
         
-        # Create consumption with daily and weekly patterns
-        hour_effect = np.sin(np.pi * dates.hour / 24) * 10
-        day_effect = np.sin(np.pi * dates.dayofweek / 7) * 5
+        # Show preview
+        st.dataframe(sample_df.head(), use_container_width=True)
         
-        consumption = 100 + hour_effect + day_effect
-        
-        # Add trend and noise
-        consumption += np.linspace(0, 10, len(dates))
-        consumption += np.random.normal(0, 5, len(dates))
-        
-        # Create anomalies (for documentation, not detected yet)
-        anomaly_indices = np.random.choice(range(len(dates)), size=50, replace=False)
-        consumption_array = consumption.values.copy()  # Convert to numpy array
-        for idx in anomaly_indices:
-            consumption_array[idx] *= np.random.choice([0.5, 1.5])
-        consumption = pd.Series(consumption_array, index=dates)
-        
-        # Create DataFrame
-        df = pd.DataFrame({
-            'timestamp': dates,
-            'consumption': consumption,
-            'meter_id': np.random.choice(['M001', 'M002', 'M003', 'M004', 'M005'], len(dates)),
-            'location': np.random.choice(['Office', 'Factory', 'Warehouse', 'Data Center'], len(dates)),
-            'temperature': 20 + 10 * np.sin(np.pi * np.arange(len(dates)) / (24 * 30)) + np.random.normal(0, 2, len(dates)),
-            'humidity': 50 + 20 * np.sin(np.pi * np.arange(len(dates)) / (24 * 15)) + np.random.normal(0, 5, len(dates))
+        # Log the activity for offline tracking
+        log_offline_activity("sample_data_viewed", {
+            "rows": len(sample_df),
+            "columns": len(sample_df.columns)
         })
+    
+    with col2:
+        st.markdown("#### Download or Load Sample")
         
-        return df
+        # Create download link for sample data (offline friendly)
+        sample_path = os.path.join(DATA_DIR, "sample_energy_data.csv")
+        if os.path.exists(sample_path):
+            with open(sample_path, "rb") as f:
+                sample_bytes = f.read()
+                
+            # Create a download button
+            st.download_button(
+                label="Download Sample CSV",
+                data=sample_bytes,
+                file_name="sample_energy_data.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        else:
+            # If file doesn't exist on disk yet, create it from the dataframe
+            csv = sample_df.to_csv(index=False).encode('utf-8')
+            # Save for future use
+            os.makedirs(DATA_DIR, exist_ok=True)
+            with open(sample_path, "wb") as f:
+                f.write(csv)
+                
+            # Create a download button
+            st.download_button(
+                label="Download Sample CSV",
+                data=csv,
+                file_name="sample_energy_data.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
     
-    sample_df = generate_sample_data()
-    
-    # Show preview
-    st.dataframe(sample_df.head(), use_container_width=True)
-    
-    # Create download button
-    csv = sample_df.to_csv(index=False).encode('utf-8')
-    
-    st.download_button(
-        label="Download Sample CSV",
-        data=csv,
-        file_name="sample_energy_data.csv",
-        mime="text/csv",
-        use_container_width=True
-    )
-    
+    # Load sample button (without downloading)
+    if st.button("Load Sample Dataset Directly", use_container_width=True, type="primary"):
+        # Process and store the sample data
+        with st.spinner("Loading sample data..."):
+            df_processed = preprocess_data(sample_df)
+            st.session_state.current_data = df_processed
+            
+            # Log the activity for offline tracking
+            log_offline_activity("sample_data_loaded", {
+                "rows": len(df_processed),
+                "columns": len(df_processed.columns),
+                "processed": True
+            })
+            
+            st.success("Sample data loaded successfully! You can now proceed to anomaly detection.")
+            time.sleep(1)
+            st.switch_page("pages/04_run_detection.py")
+            
     # Instructions for using the sample data
     st.markdown("""
     **To use the sample data:**
-    1. Click the "Download Sample CSV" button above
-    2. Upload the downloaded file using the file uploader at the top of this page
-    3. Proceed with the anomaly detection process
+    1. Either download the sample CSV using the button above and then upload it, or
+    2. Click "Load Sample Dataset Directly" to use the data immediately without downloading
+    3. The system will automatically process the data and prepare it for anomaly detection
+    
+    *This feature works 100% offline with no internet connection required.*
     """)
 
 # Footer

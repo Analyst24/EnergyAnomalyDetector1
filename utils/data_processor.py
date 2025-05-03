@@ -2,15 +2,35 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import os
+import warnings
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import base64
+import json
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+# Import offline utilities
+try:
+    from utils.offline import log_offline_activity, DATA_DIR, CACHE_DIR
+except ImportError:
+    # Fallback if offline module is not available
+    def log_offline_activity(activity_type, details=None):
+        pass
+    DATA_DIR = "data"
+    CACHE_DIR = "cache"
+    
+    # Ensure directories exist
+    for directory in [DATA_DIR, CACHE_DIR]:
+        os.makedirs(directory, exist_ok=True)
+
+# Suppress warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 def load_data(file_path):
     """
-    Load data from a CSV file
+    Load data from a CSV file with offline support
     
     Args:
         file_path: Path to the CSV file
@@ -19,14 +39,60 @@ def load_data(file_path):
         pandas DataFrame with loaded data
     """
     try:
+        # Log the data loading attempt
+        log_offline_activity("data_load_attempt", {"file_path": file_path})
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            # If the path doesn't include the data directory, try looking there
+            if DATA_DIR not in file_path:
+                alternative_path = os.path.join(DATA_DIR, os.path.basename(file_path))
+                if os.path.exists(alternative_path):
+                    file_path = alternative_path
+                else:
+                    raise FileNotFoundError(f"File not found: {file_path}")
+        
+        # Load the data
         df = pd.read_csv(file_path)
+        
+        # Cache a copy in the data directory for offline use
+        cache_file_path = os.path.join(DATA_DIR, f"cached_{os.path.basename(file_path)}")
+        os.makedirs(os.path.dirname(cache_file_path), exist_ok=True)
+        df.to_csv(cache_file_path, index=False)
+        
+        # Log success
+        log_offline_activity("data_load_success", {
+            "file_path": file_path,
+            "cached_path": cache_file_path,
+            "rows": len(df),
+            "columns": len(df.columns)
+        })
+        
         return df
     except Exception as e:
+        # Log the error
+        log_offline_activity("data_load_error", {"file_path": file_path, "error": str(e)})
+        
+        # Try to load from cache as fallback
+        try:
+            cache_file_path = os.path.join(DATA_DIR, f"cached_{os.path.basename(file_path)}")
+            if os.path.exists(cache_file_path):
+                df = pd.read_csv(cache_file_path)
+                log_offline_activity("data_load_from_cache", {
+                    "file_path": cache_file_path,
+                    "rows": len(df),
+                    "columns": len(df.columns)
+                })
+                return df
+        except Exception:
+            pass
+        
+        # If all else fails, raise the original error
         raise Exception(f"Error loading data: {str(e)}")
 
 def preprocess_data(df):
     """
-    Preprocess the input dataframe
+    Preprocess the input dataframe with offline support
     
     Args:
         df: pandas DataFrame with raw data
@@ -34,38 +100,74 @@ def preprocess_data(df):
     Returns:
         Preprocessed pandas DataFrame
     """
-    # Make a copy to avoid modifying the original
-    df_processed = df.copy()
-    
-    # Convert timestamp to datetime if it exists
-    if 'timestamp' in df_processed.columns:
-        df_processed['timestamp'] = pd.to_datetime(df_processed['timestamp'], errors='coerce')
+    try:
+        # Log start of preprocessing
+        log_offline_activity("preprocessing_start", {
+            "original_shape": df.shape,
+            "columns": list(df.columns)
+        })
         
-        # Extract time-based features
-        df_processed['hour'] = df_processed['timestamp'].dt.hour
-        df_processed['day_of_week'] = df_processed['timestamp'].dt.dayofweek
-        df_processed['month'] = df_processed['timestamp'].dt.month
-        df_processed['is_weekend'] = df_processed['day_of_week'].isin([5, 6]).astype(int)
+        # Make a copy to avoid modifying the original
+        df_processed = df.copy()
         
-        # Business hours flag (8 AM to 6 PM)
-        df_processed['is_business_hours'] = ((df_processed['hour'] >= 8) & 
-                                             (df_processed['hour'] < 18)).astype(int)
+        # Convert timestamp to datetime if it exists
+        if 'timestamp' in df_processed.columns:
+            df_processed['timestamp'] = pd.to_datetime(df_processed['timestamp'], errors='coerce')
+            
+            # Extract time-based features
+            df_processed['hour'] = df_processed['timestamp'].dt.hour
+            df_processed['day_of_week'] = df_processed['timestamp'].dt.dayofweek
+            df_processed['month'] = df_processed['timestamp'].dt.month
+            df_processed['is_weekend'] = df_processed['day_of_week'].isin([5, 6]).astype(int)
+            
+            # Business hours flag (8 AM to 6 PM)
+            df_processed['is_business_hours'] = ((df_processed['hour'] >= 8) & 
+                                                (df_processed['hour'] < 18)).astype(int)
+        
+        # Track missing value counts before handling
+        missing_before = df_processed.isnull().sum().to_dict()
+        
+        # Handle missing values
+        numeric_cols = df_processed.select_dtypes(include=[np.number]).columns
+        
+        # For numeric columns, fill missing values with mean
+        for col in numeric_cols:
+            if df_processed[col].isnull().sum() > 0:
+                df_processed[col] = df_processed[col].fillna(df_processed[col].mean())
+        
+        # For categorical columns, fill with mode
+        categorical_cols = df_processed.select_dtypes(include=['object']).columns
+        for col in categorical_cols:
+            if df_processed[col].isnull().sum() > 0:
+                df_processed[col] = df_processed[col].fillna(df_processed[col].mode()[0])
+        
+        # Track missing value counts after handling
+        missing_after = df_processed.isnull().sum().to_dict()
+        
+        # Cache the processed dataframe for offline use
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            cache_path = os.path.join(CACHE_DIR, f"processed_data_{timestamp}.csv")
+            df_processed.to_csv(cache_path, index=False)
+        except Exception as e:
+            # If caching fails, just log and continue
+            log_offline_activity("preprocessing_cache_error", {"error": str(e)})
+        
+        # Log preprocessing completion
+        log_offline_activity("preprocessing_complete", {
+            "processed_shape": df_processed.shape,
+            "missing_before": missing_before,
+            "missing_after": missing_after,
+            "added_columns": list(set(df_processed.columns) - set(df.columns))
+        })
+        
+        return df_processed
     
-    # Handle missing values
-    numeric_cols = df_processed.select_dtypes(include=[np.number]).columns
-    
-    # For numeric columns, fill missing values with mean
-    for col in numeric_cols:
-        if df_processed[col].isnull().sum() > 0:
-            df_processed[col] = df_processed[col].fillna(df_processed[col].mean())
-    
-    # For categorical columns, fill with mode
-    categorical_cols = df_processed.select_dtypes(include=['object']).columns
-    for col in categorical_cols:
-        if df_processed[col].isnull().sum() > 0:
-            df_processed[col] = df_processed[col].fillna(df_processed[col].mode()[0])
-    
-    return df_processed
+    except Exception as e:
+        # Log error
+        log_offline_activity("preprocessing_error", {"error": str(e)})
+        # Re-raise the exception
+        raise
 
 def scale_features(df, scaler_type='standard'):
     """
