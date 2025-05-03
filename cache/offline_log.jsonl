@@ -41,3 +41,18 @@
 {"timestamp": "2025-05-03T10:37:35.125487", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
 {"timestamp": "2025-05-03T10:37:36.506733", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
 {"timestamp": "2025-05-03T10:38:09.704113", "type": "sample_data_viewed", "details": {"rows": 216, "columns": 6}}
+{"timestamp": "2025-05-03T10:47:55.976758", "type": "startup", "details": {"offline_mode": true, "internet_available": false}}
+{"timestamp": "2025-05-03T10:47:57.596124", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:48:04.430548", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:48:10.651444", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:48:20.760586", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:48:23.526703", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:48:26.399106", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:48:26.638477", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:48:28.111550", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:52:30.910291", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:55:42.137730", "type": "startup", "details": {"offline_mode": true, "internet_available": false}}
+{"timestamp": "2025-05-03T10:55:43.524939", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:57:25.397425", "type": "startup", "details": {"offline_mode": true, "internet_available": false}}
+{"timestamp": "2025-05-03T10:57:26.780609", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
+{"timestamp": "2025-05-03T10:57:29.714520", "type": "app_startup", "details": {"python_version": "3.11.10 (main, Sep  7 2024, 01:03:31) [GCC 13.3.0]", "offline_mode": true, "internet_connection": false}}
