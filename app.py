@@ -1,10 +1,11 @@
 import streamlit as st
-import requests
 import os
 import json
 from streamlit_option_menu import option_menu
 import pandas as pd
 import time
+from utils.auth import login_user, register_user, logout_user
+from utils.database import initialize_database
 
 # Set up page configuration
 st.set_page_config(
@@ -14,14 +15,16 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Flask backend URL
-FLASK_URL = "http://localhost:8000"
+# Initialize database
+initialize_database()
 
 # Session state initialization
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "username" not in st.session_state:
     st.session_state.username = ""
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
 if "current_data" not in st.session_state:
     st.session_state.current_data = None
 if "detection_results" not in st.session_state:
@@ -33,45 +36,15 @@ if "threshold" not in st.session_state:
 if "sidebar_state" not in st.session_state:
     st.session_state.sidebar_state = "expanded"
 
-# Authentication functions
+# Authentication functions using database
 def login(username, password):
-    try:
-        response = requests.post(
-            f"{FLASK_URL}/login",
-            json={"username": username, "password": password}
-        )
-        if response.status_code == 200:
-            st.session_state.authenticated = True
-            st.session_state.username = username
-            return True
-        else:
-            return False
-    except:
-        # Offline fallback authentication for demo purposes
-        # In production, this should be replaced with proper authentication
-        if username == "demo" and password == "energy123":
-            st.session_state.authenticated = True
-            st.session_state.username = username
-            return True
-        return False
+    return login_user(username, password)
 
 def signup(username, email, password):
-    try:
-        response = requests.post(
-            f"{FLASK_URL}/signup",
-            json={"username": username, "email": email, "password": password}
-        )
-        return response.status_code == 201
-    except:
-        # Offline fallback for demo purposes
-        # In production, this should be replaced with proper user registration
-        st.session_state.authenticated = True
-        st.session_state.username = username
-        return True
+    return register_user(username, email, password)
 
 def logout():
-    st.session_state.authenticated = False
-    st.session_state.username = ""
+    logout_user()
     st.session_state.current_data = None
     st.session_state.detection_results = None
 
