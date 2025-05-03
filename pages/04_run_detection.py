@@ -23,19 +23,19 @@ st.set_page_config(
 # Create sidebar
 with st.sidebar:
     selected = option_menu(
-        "Navigation",
+        "",  # Removed "Navigation" label
         ["Home", "Dashboard", "Upload Data", "Run Detection", "Results", 
          "Model Insights", "Recommendations", "Settings", "Logout"],
         icons=['house', 'graph-up', 'cloud-upload', 'play-circle', 'clipboard-data', 
                'tools', 'lightbulb', 'gear', 'box-arrow-right'],
-        menu_icon="cast",
+        menu_icon=None,  # Removed menu icon
         default_index=3,
     )
     
     # Handle navigation
     if selected != "Run Detection":
         if selected == "Home":
-            st.switch_page("pages/01_get_started.py")
+            st.switch_page("pages/01_home.py")
         else:
             page_name = selected.lower().replace(' ', '_')
             idx = ["dashboard", "upload_data", "results", "model_insights", 

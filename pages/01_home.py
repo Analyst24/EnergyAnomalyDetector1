@@ -21,12 +21,12 @@ st.set_page_config(
 # Create sidebar
 with st.sidebar:
     selected = option_menu(
-        "Navigation",
+        "",  # Removed "Navigation" label
         ["Home", "Dashboard", "Upload Data", "Run Detection", "Results", 
          "Model Insights", "Recommendations", "Settings", "Logout"],
         icons=['house', 'graph-up', 'cloud-upload', 'play-circle', 'clipboard-data', 
                'tools', 'lightbulb', 'gear', 'box-arrow-right'],
-        menu_icon="cast",
+        menu_icon=None,  # Removed menu icon
         default_index=0,
     )
     

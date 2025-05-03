@@ -111,9 +111,6 @@ if not st.session_state.authenticated:
         with st.container():
             st.markdown("<h1 style='text-align: center;'>Energy Anomaly Detection</h1>", unsafe_allow_html=True)
             
-            if OFFLINE_MODE:
-                st.info("Application is running in offline mode. All features will work without internet connectivity.")
-            
             tab1, tab2 = st.tabs(["Login", "Sign Up"])
             
             with tab1:
